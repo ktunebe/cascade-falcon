@@ -1,11 +1,11 @@
 const express = require('express')
-const writeToDb = require('./write-file.js')
+const {writeToDb, readFromDb} = require('./file-system.js')
 const ShortUniqueId = require('short-unique-id');
 const uid = new ShortUniqueId({length: 10})
 const path = require('path')
 const app = express()
 const PORT = 3001;
-const notes = require('./db/db.json')
+
 
 app.use(express.static(path.join(__dirname, 'public')))
 
@@ -20,27 +20,31 @@ app.get("/notes", (req, res) => {
 });
 
 
-app.get("/api/notes", (req, res) => {
+app.get("/api/notes", async (req, res) => {
+    const notes = await readFromDb()
     res.json(notes)
+    console.log(notes)
 });
 
-app.post("/api/notes", (req, res) => {
+app.post("/api/notes", async (req, res) => {
     const newNote = req.body
+    const notes = await readFromDb()
     newNote.id = uid.rnd()
     if (notes.some(note => note.id === newNote.id)) {
         newNote.id = uid.rnd()
     }
     notes.push(newNote) 
-    writeToDb(JSON.stringify(notes))
+    await writeToDb(notes)
     res.json(notes)
-    // console.log(notes)
 });
 
-app.delete("/api/notes/:id", (req, res) => {
+app.delete("/api/notes/:id", async (req, res) => {
+    const notes = await readFromDb()
     const idToDelete = req.params.id
     const newNotes = notes.filter(note => note.id !== idToDelete)
-    res.json(newNotes)
-    writeToDb(JSON.stringify(newNotes))
+    await writeToDb(newNotes)
+    // res.json(newNotes)
+    res.end()
 });
 
 
