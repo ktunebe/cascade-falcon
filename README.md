@@ -1,4 +1,4 @@
-# cascade-falcon
+# note-taking-app
 
 ## Description
 
